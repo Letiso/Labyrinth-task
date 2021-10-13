@@ -1,0 +1,33 @@
+# Exceptions
+class Error(Exception):
+    _error = None
+
+    def __init__(self) -> None:
+        self._name: str = 'Шарик'
+
+    def __str__(self) -> str:
+        return self._error
+
+
+class HittingTheWallError(Error):
+    def __init__(self) -> None:
+        super().__init__()
+        self._error: str = f"{self._name.upper} ударился о стену и убежал"
+
+
+class WrongPathError(Error):
+    def __init__(self) -> None:
+        super().__init__()
+        self._error: str = f"{self._name.upper} заблудился"
+
+
+class BackStepError(Error):
+    def __init__(self) -> None:
+        super().__init__()
+        self._error: str = f"{self._name.upper} струсил и убежал"
+
+
+class Congratulations(Error):
+    def __init__(self) -> None:
+        super().__init__()
+        self._error: str = f"{self._name.upper} нашел косточку"
