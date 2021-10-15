@@ -2,7 +2,7 @@ from os import system
 from typing import Optional
 from copy import deepcopy
 from abc import ABC, abstractmethod
-from errors import *
+from exceptions import *
 
 
 # Cells abstract class
