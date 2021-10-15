@@ -12,22 +12,22 @@ class Error(Exception):
 class HittingTheWallError(Error):
     def __init__(self) -> None:
         super().__init__()
-        self._error: str = f"{self._name.upper} ударился о стену и убежал"
+        self._error: str = f"{self._name} ударился о стену"
 
 
 class WrongPathError(Error):
     def __init__(self) -> None:
         super().__init__()
-        self._error: str = f"{self._name.upper} заблудился"
+        self._error: str = f"{self._name} заблудился"
 
 
 class BackStepError(Error):
     def __init__(self) -> None:
         super().__init__()
-        self._error: str = f"{self._name.upper} струсил и убежал"
+        self._error: str = f"{self._name} струсил и убежал"
 
 
 class Congratulations(Error):
     def __init__(self) -> None:
         super().__init__()
-        self._error: str = f"{self._name.upper} нашел косточку"
+        self._error: str = f"{self._name} нашел косточку"

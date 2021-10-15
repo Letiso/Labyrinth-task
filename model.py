@@ -1,4 +1,4 @@
-import json
+from typing import Optional
 from copy import deepcopy
 from abc import ABC, abstractmethod
 from errors import *
@@ -12,10 +12,8 @@ class Wall:
     @abstractmethod
     def __str__(self) -> str: pass
 
-    def __radd__(self, player: 'Player') -> None:
-
-        # TODO Make a transfer to the next cell in the desired direction, if the wall is transparent
-        if not self._show: pass
+    def __radd__(self, player: 'Player') -> Optional[bool]:
+        if not self._show: return True
 
         else:
             raise HittingTheWallError()
@@ -71,13 +69,25 @@ class Path(Cell):
             match self._status:
                 case 'SavePoint': raise BackStepError()
                 case 'Finish': raise Congratulations()
-
-                # todo Make swapping between player cell and path cell
                 case None: return True
 
 
 class Player(Cell):
-    def __init__(self) -> None: pass
+    _currentPathCell: Path = None
+
+    def __init__(self) -> None:
+        self.current_pos = {
+            'x': 1,
+            'y': 1
+        }
+
+    @property
+    def path(self):
+        return self._currentPathCell
+
+    @path.setter
+    def path(self, new_path: Path):
+        self._currentPathCell = new_path
 
     def __str__(self) -> str:
         return '<>'
@@ -119,6 +129,10 @@ class Level:
         # self._configure_adjacent_walls()
         self._right_path_init(level_generator['path'])
 
+    @property
+    def matrix(self):
+        return self._matrix
+
     def _generate_matrix(self, walls_code: tuple):
         for y, string in enumerate(walls_code):
             result = []
@@ -133,63 +147,15 @@ class Level:
             self._matrix.append(result)
 
     # TODO make adjacent walls init initialisation
-    # def _configure_adjacent_walls(self):
-    #     current_pos = {
-    #         'x': 0,
-    #         'y': 0
-    #     }
-    #     last_available_pos = {
-    #         'x': len(self._matrix[-1]),
-    #         'y': len(self._matrix)
-    #     }
-    #
-    #     adjacent_walls_property: list = []
-    #     while current_pos['y'] != last_available_pos['y']:
-    #         adjacent_walls_string = []
-    #
-    #         current_pos['x'] = 0
-    #
-    #         if current_pos['y']:
-    #             string = self._upper_side_check(current_pos, last_available_pos['x'])
-    #             adjacent_walls_string.append(string)
-    #         else:
-    #             adjacent_walls_string.append([None for x, wall in enumerate(self._matrix[0])
-    #                                           if x % 2 == 0])
-    #
-    #         for side in - 1, + 1:
-    #             string = self._middle_side_check(current_pos, last_available_pos['x'])
-    #             adjacent_walls_string.append(string)
-    #
-    #         if current_pos['y'] != last_available_pos['y']:
-    #             self._lower_side_check(current_pos, last_available_pos['x'])
-    #         else:
-    #             adjacent_walls_string.append([None for x, wall in enumerate(self._matrix[-1])
-    #                                           if x % 2 == 0])
-    #
-    #         codes = [(up, left, right, down)
-    #                  for up, left, right, down in adjacent_walls_string]
-    #         adjacent_walls_property.append(codes)
-    #
-    #         current_pos['y'] += 1
-    #
-    #
-    # def _upper_side_check(self, current_pos, last_x):
-    #     upper_side = []
-    #     while current_pos['x'] <= last_x:
-    #         pass
-    #     return upper_side
-    #
-    # def _middle_side_check(self, current_pos, last_x):
-    #     middle_side = []
-    #     while current_pos['x'] <= last_x:
-    #         pass
-    #     return middle_side
-    #
-    # def _lower_side_check(self, current_pos, last_x):
-    #     lower_side = []
-    #     while current_pos['x'] <= last_x:
-    #         pass
-    #     return lower_side
+    def _configure_adjacent_walls(self):
+        current_pos = {
+            'x': 0,
+            'y': 0
+        }
+        last_available_pos = {
+            'x': len(self._matrix[-1]),
+            'y': len(self._matrix)
+        }
 
     def _right_path_init(self, path_code: tuple):
         for string_code, string in zip(path_code, [string for y, string
@@ -260,14 +226,39 @@ class Core:
 
     def __init__(self, difficulty: str, level: str) -> None:
         self._level = Level(self._levels[difficulty][level])
-        self.player1 = Player()
+        self._player = Player()
 
     @property
     def levels(self) -> dict:
         return deepcopy(self._levels)
+
+    def move_to(self, side: str):
+        x, y = self._player.current_pos['x'], self._player.current_pos['y']
+        side_x, side_y = (1 if side == 'right'
+                          else - 1 if side == 'left'
+                          else 0,
+
+                          1 if side == 'up'
+                          else -1 if side == 'down'
+                          else 0)
+
+        if (x + side_x) == 0:
+            """checking for player movement to the start wall"""
+            if str(self._level.matrix[y + side_y][x + side_x]) == ' ': raise BackStepError()
+
+        # noinspection PyUnresolvedReferences
+        if self._player + self._level.matrix[y + side_y][x + side_x]:
+            # noinspection PyUnresolvedReferences
+
+            if self._player + self._level.matrix[(side_y := y + side_y * 2)][(side_x := x + side_x * 2)]:
+
+                self._level.matrix[y][x] = self._player.path
+                self._player.path = self._level.matrix[side_y][side_x]
+                self._level.matrix[side_y][side_x] = self._player
 
 
 if __name__ == '__main__':
     game = Core('easy', 'level 1')
 
     print(game._level)
+    game.move_to('up')
