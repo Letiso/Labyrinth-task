@@ -246,6 +246,7 @@ class Core:
         'hard': {}
     }
 
+    # Todo save and reload engine
     def __init__(self, difficulty: str, level: str) -> None:
         self._level = Level(self._levels[difficulty][level])
         self._player = Player()
