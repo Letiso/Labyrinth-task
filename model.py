@@ -1,8 +1,9 @@
-from os import system
+from abc import ABC, abstractmethod
 from typing import Optional
 from copy import deepcopy
-from abc import ABC, abstractmethod
 from exceptions import *
+
+from os import system
 
 
 # Cells abstract class
