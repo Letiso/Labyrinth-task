@@ -9,6 +9,12 @@ from os import system
 
 # Cells abstract class
 class Cell(ABC):
+    _show = None
+
+    @property
+    def show(self):
+        return self._show
+
     @abstractmethod
     def __str__(self) -> str: pass
 
@@ -20,7 +26,6 @@ class Wall:
 
     def __radd__(self, player: 'Player') -> Optional[bool]:
         if not self._show: return True
-
         else:
             raise HittingTheWallError()
 
@@ -37,12 +42,38 @@ class HorizontalWall(Cell, Wall):
 
 
 class AdjacentWall(Cell):
-    def __init__(self):
-        self._show = self._view = None
+    _views: dict = {
+        'lurd': '+',
 
-    def init(self, view: str):
+        '_u__': '|',
+        '_u_d': '|',
+        '___d': '|',
+
+        'l_r_': '—',
+        'l___': '—',
+        '__r_': '—',
+
+        '____': ' ',
+
+        'lu__': '┘',
+        '_ur_': '└',
+
+        'l__d': '┐',
+        '__rd': '┌',
+
+        'lur_': '┴',
+        'l_rd': '┬',
+
+        '_urd': '├',
+        'lu_d': '┤',
+
+    }
+
+    _view = None
+
+    def init(self, key: str):
         self._show = True
-        self._view = view
+        self._view = self._views[key]
 
     def __str__(self) -> str:
         return ' ' if not self._show else self._view
@@ -73,8 +104,8 @@ class Path(Cell):
         self._status = status
 
     def __str__(self) -> str:
-        return '  ' if not self._right_path else '++'
-        # return '  '
+        # return '  ' if not self._right_path else '++'
+        return '  '
 
     def __radd__(self, player: 'Player') -> bool:
         if not self._right_path:
@@ -106,37 +137,10 @@ class Player(Cell):
 
 # Map
 class Level:
-    _adjacent_walls_symbols = {
-        'ulrd': '+',
-
-        'u___': '|',
-        'u__d': '|',
-        '___d': '|',
-
-        '_lr_': '—',
-        '_l__': '—',
-        '__r_': '—',
-
-        '____': ' ',
-
-        'ul__': '┘',
-        'u_r_': '└',
-
-        '_l_d': '┐',
-        '__rd': '┌',
-
-        'ulr_': '┴',
-        '_lrd': '┬',
-
-        'u_rd': '├',
-        'ul_d': '┤',
-
-    }
-
     def __init__(self, level_generator: dict) -> None:
         self._matrix = []
         self._generate_matrix(level_generator['walls'])
-        # self._configure_adjacent_walls()
+        self._configure_adjacent_walls()
         self._right_path_init(level_generator['path'])
 
     @property
@@ -156,16 +160,31 @@ class Level:
                 result.append(VerticalWall(int(string[-1])))
             self._matrix.append(result)
 
-    # TODO make adjacent walls init initialisation
-    # def _configure_adjacent_walls(self):
-    #     current_pos = {
-    #         'x': 0,
-    #         'y': 0
-    #     }
-    #     last_available_pos = {
-    #         'x': len(self._matrix[-1]),
-    #         'y': len(self._matrix)
-    #     }
+    def _configure_adjacent_walls(self):
+        for y, string in enumerate(self._matrix):
+            if y % 2 == 0:
+                for x, wall in enumerate(string):
+                    if isinstance(wall, AdjacentWall):
+                        key = str()
+                        for side in 'l', 'u', 'r', 'd':
+                            side_x, side_y = (1 if side == 'r'
+                                              else - 1 if side == 'l'
+                                              else 0,
+
+                                              -1 if side == 'u'
+                                              else 1 if side == 'd'
+                                              else 0)
+                            try:
+                                side_x, side_y = side_x + x, side_y + y
+                                if side_x == -1 or side_y == -1: raise IndexError
+
+                                if self._matrix[side_y][side_x].show:
+                                    key += side
+                                else:
+                                    key += '_'
+                            except IndexError:
+                                key += '_'
+                        wall.init(key)
 
     def _right_path_init(self, path_code: tuple):
         for string_code, string in zip(path_code, [string for y, string
@@ -258,6 +277,10 @@ class Core:
     }
     _level = _player = None
 
+    @property
+    def levels(self) -> dict:
+        return deepcopy(self._levels)
+
     def new_game(self, difficulty: str, level: str) -> None:
         self._level = Level(self._levels[difficulty][level])
         self._player = Player()
@@ -273,15 +296,11 @@ class Core:
         with open('save.pickle', 'rb') as save:
             self._level, self._player = pickle.load(save).load()
 
-    @property
-    def levels(self) -> dict:
-        return deepcopy(self._levels)
-
     def move_to(self, side: str):
         x, y = self._player.current_pos['x'], self._player.current_pos['y']
         side_x, side_y = (1 if side == 'right'
                           else - 1 if side == 'left'
-                          else 0,
+        else 0,
 
                           -1 if side == 'up'
                           else 1 if side == 'down'
@@ -312,23 +331,22 @@ if __name__ == '__main__':
 
     system('cls')
     print(game._level)
-    for side in 'right', \
-                'down', \
-                'left', \
-                'down', \
-                'right', 'right', 'right', 'right', \
-                'down', 'down', \
-                'right', 'right', 'right', 'right', \
-                'down', \
-                'left', \
-                'down', 'down', \
-                'left', \
-                'down', \
-                'right', \
-                'down', \
-                'right', 'right':
-
+    for turn_side in 'right', \
+                     'down', \
+                     'left', \
+                     'down', \
+                     'right', 'right', 'right', 'right', \
+                     'down', 'down', \
+                     'right', 'right', 'right', 'right', \
+                     'down', \
+                     'left', \
+                     'down', 'down', \
+                     'left', \
+                     'down', \
+                     'right', \
+                     'down', \
+                     'right', 'right':
         input()
-        game.move_to(side)
+        game.move_to(turn_side)
         system('cls')
         print(game._level)
