@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 from copy import deepcopy
+import pickle
 from exceptions import *
 
 from os import system
@@ -200,6 +201,15 @@ class Level:
         return result
 
 
+class Save:
+    def __init__(self, level: Level, player: Player):
+        self._level = level
+        self._player = player
+
+    def load(self):
+        return self._level, self._player
+
+
 # Game
 class Core:
     _levels: dict = {
@@ -246,12 +256,22 @@ class Core:
         'medium': {},
         'hard': {}
     }
+    _level = _player = None
 
-    # Todo save and reload engine
-    def __init__(self, difficulty: str, level: str) -> None:
+    def new_game(self, difficulty: str, level: str) -> None:
         self._level = Level(self._levels[difficulty][level])
         self._player = Player()
         self._level.start_and_finish_init(self._player)
+        self._save_game()
+
+    def _save_game(self):
+        memento = Save(self._level, self._player)
+        with open('save.pickle', 'wb') as save:
+            pickle.dump(memento, save)
+
+    def load_game(self):
+        with open('save.pickle', 'rb') as save:
+            self._level, self._player = pickle.load(save).load()
 
     @property
     def levels(self) -> dict:
@@ -282,9 +302,13 @@ class Core:
                 self._player.path = self._level.matrix[side_y][side_x]
                 self._level.matrix[side_y][side_x] = self._player
 
+                self._save_game()
+
 
 if __name__ == '__main__':
-    game = Core('easy', 'level 1')
+    game = Core()
+
+    game.new_game('easy', 'level 1')
 
     system('cls')
     print(game._level)
