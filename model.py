@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 from copy import deepcopy
-import pickle
 from exceptions import *
-
-from os import system
+import pickle
 
 
 # Cells abstract class
@@ -213,7 +211,7 @@ class Level:
     def __str__(self) -> str:
         result = str()
         for string in self._matrix:
-            result += '\t' * 5
+            result += '\t' * 3
             for cell in [str(cell) for cell in string]:
                 result += cell
             result += '\n'
@@ -281,6 +279,10 @@ class Core:
     def levels(self) -> dict:
         return deepcopy(self._levels)
 
+    @property
+    def level(self):
+        return self._level
+
     def new_game(self, difficulty: str, level: str) -> None:
         self._level = Level(self._levels[difficulty][level])
         self._player = Player()
@@ -300,7 +302,7 @@ class Core:
         x, y = self._player.current_pos['x'], self._player.current_pos['y']
         side_x, side_y = (1 if side == 'right'
                           else - 1 if side == 'left'
-        else 0,
+                          else 0,
 
                           -1 if side == 'up'
                           else 1 if side == 'down'
@@ -322,31 +324,3 @@ class Core:
                 self._level.matrix[side_y][side_x] = self._player
 
                 self._save_game()
-
-
-if __name__ == '__main__':
-    game = Core()
-
-    game.new_game('easy', 'level 1')
-
-    system('cls')
-    print(game._level)
-    for turn_side in 'right', \
-                     'down', \
-                     'left', \
-                     'down', \
-                     'right', 'right', 'right', 'right', \
-                     'down', 'down', \
-                     'right', 'right', 'right', 'right', \
-                     'down', \
-                     'left', \
-                     'down', 'down', \
-                     'left', \
-                     'down', \
-                     'right', \
-                     'down', \
-                     'right', 'right':
-        input()
-        game.move_to(turn_side)
-        system('cls')
-        print(game._level)
