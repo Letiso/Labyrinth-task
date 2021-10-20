@@ -102,8 +102,8 @@ class Path(Cell):
         self._status = status
 
     def __str__(self) -> str:
-        # return '  ' if not self._right_path else '++'
-        return '  '
+        return '  ' if not self._right_path else '++'
+        # return '  '
 
     def __radd__(self, player: 'Player') -> bool:
         if not self._right_path:
@@ -116,10 +116,12 @@ class Path(Cell):
 
 class Player(Cell):
     _currentPathCell: Path = None
-    current_pos = {
-        'x': 0,
-        'y': 0
-    }
+
+    def __init__(self):
+        self.current_pos = {
+            'x': 0,
+            'y': 0
+        }
 
     @property
     def path(self):
@@ -297,6 +299,7 @@ class Core:
     def load_game(self):
         with open('save.pickle', 'rb') as save:
             self._level, self._player = pickle.load(save).load()
+            print()
 
     def move_to(self, side: str):
         x, y = self._player.current_pos['x'], self._player.current_pos['y']
