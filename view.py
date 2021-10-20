@@ -1,6 +1,7 @@
 from observer import Subscriber
 from os import system as bash
 from platform import system
+from exceptions import ExitGame
 
 
 def underline_creator(method):
@@ -38,7 +39,10 @@ class View(Subscriber):
         self._view_model.subscribe(self)
 
     def game_start(self):
-        self._view_model.game_start()
+        try:
+            self._view_model.game_start()
+        except ExitGame:
+            pass
 
     @staticmethod
     @underline_creator

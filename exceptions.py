@@ -31,3 +31,6 @@ class Congratulations(Error):
     def __init__(self) -> None:
         super().__init__()
         self._error: str = f"{self._name} нашел косточку"
+
+
+class ExitGame(Exception): pass

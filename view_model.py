@@ -32,7 +32,6 @@ class ViewModel(Publisher):
 
         self._main_menu()
 
-        # todo implement corrected session end
         if self._session:
             self._message = '\t\t\tВыберите в какую сторону пойти'
             buttons = self._create_buttons(self._buttonsDict['controls'])
@@ -103,12 +102,19 @@ class ViewModel(Publisher):
     def _exit_game(self):
         self._clear()
         self._message = '\t\t\tДо встречи, Шарик будет ждать тебя!'
+        self.notify()
+
+        raise ExitGame()
 
     def _clear(self):
         self._session = self._level = self._buttons = None
 
-    # todo rework
     def _except_handler(self, message):
+        match message.__class__.__name__:
+            case HittingTheWallError.__name__: self._message_type = 'error'
+            case BackStepError.__name__: self._message_type = 'error'
+            case WrongPathError.__name__: self._message_type = 'error'
+            case Congratulations.__name__: self._message_type = 'success'
         self._message = f'\t\t\t{message}'
         self._clear()
         self.notify()
