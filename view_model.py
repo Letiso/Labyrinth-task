@@ -4,12 +4,11 @@ from exceptions import *
 
 
 class ViewModel(Publisher):
-    _message_type = _message = _level = _buttons = None
+    _session = _message_type = _message = _level = _buttons = None
 
     def __init__(self, model):
         super().__init__()
         self._model = model
-        self._session = True
 
         self._buttonsDict = {
             'load': {
@@ -28,15 +27,12 @@ class ViewModel(Publisher):
         }
 
     def game_start(self):
-        self._level = self._buttons = None
         self._message_type = 'message'
-        self._message = '\t\t\tПриветствую!\n' \
-                        '\tЭто игра "Лабиринт" и вам нужно помочь Шарику найти косточку'
-        self.notify()
-        input()
+        self._greetings()
 
         self._main_menu()
 
+        # todo implement corrected session end
         if self._session:
             self._message = '\tВыберите в какую сторону пойти'
             buttons = self._create_buttons(self._buttonsDict['controls'])
@@ -44,7 +40,17 @@ class ViewModel(Publisher):
                 self._buttonsDict['controls'][self._try_user_choice(buttons)]()
                 self.notify()
 
+    def _greetings(self):
+        self._level = self._buttons = None
+
+        if not self._model.level:  # If we already seen greetings
+            self._message = '\t\t\tПриветствую!\n' \
+                            '\tЭто игра "Лабиринт" и вам нужно помочь Шарику найти косточку'
+            self.notify()
+            input()
+
     def _main_menu(self):
+        self._session = True
         try:
             open('save.pickle', 'rb')  # existing save check
 
@@ -96,27 +102,35 @@ class ViewModel(Publisher):
         self._model.load_game()
 
     def _exit_game(self):
-        self._session = self._level = self._buttons = None
+        self._clear()
         self._message = 'До встречи, Шарик будет ждать тебя!'
+
+    def _clear(self):
+        self._session = self._level = self._buttons = None
+
+    # todo rework
+    def _except_handler(self, message):
+        self._message = message
+        self._clear()
+        self.notify()
+        input()
+
+        self.game_start()
 
     def _move_to(self, side):
         try:
             self._model.move_to(side)
-        except HittingTheWallError:
+        except HittingTheWallError as message:
+            self._except_handler(message)
 
-            self._main_menu()
+        except WrongPathError as message:
+            self._except_handler(message)
 
-        except WrongPathError:
+        except BackStepError as message:
+            self._except_handler(message)
 
-            self._main_menu()
-
-        except BackStepError:
-
-            self._main_menu()
-
-        except Congratulations:
-
-            self._main_menu()
+        except Congratulations as message:
+            self._except_handler(message)
 
     def notify(self):
         for subscriber in self._subscribers:
