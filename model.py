@@ -100,6 +100,7 @@ class Path(Cell):
 
     def set_status(self, status: str):
         self._status = status
+        return self
 
     def __str__(self) -> str:
         return '  ' if not self._right_path else '++'
@@ -111,7 +112,7 @@ class Path(Cell):
         else:
             match self._status:
                 case None: return True
-                case 'SavePoint': raise BackStepError()
+                case 'Traveled': raise BackStepError()
 
 
 class Player(Cell):
@@ -299,7 +300,6 @@ class Core:
     def load_game(self):
         with open('save.pickle', 'rb') as save:
             self._level, self._player = pickle.load(save).load()
-            print()
 
     def move_to(self, side: str):
         x, y = self._player.current_pos['x'], self._player.current_pos['y']
@@ -322,7 +322,7 @@ class Core:
                 self._player.current_pos['x'] = side_x
                 self._player.current_pos['y'] = side_y
 
-                self._level.matrix[y][x] = self._player.path
+                self._level.matrix[y][x] = self._player.path.set_status('Traveled')
                 self._player.path = self._level.matrix[side_y][side_x]
                 self._level.matrix[side_y][side_x] = self._player
 
