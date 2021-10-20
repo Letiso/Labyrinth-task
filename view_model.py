@@ -34,7 +34,7 @@ class ViewModel(Publisher):
 
         # todo implement corrected session end
         if self._session:
-            self._message = '\tВыберите в какую сторону пойти'
+            self._message = '\t\t\tВыберите в какую сторону пойти'
             buttons = self._create_buttons(self._buttonsDict['controls'])
             while self._session:
                 self._buttonsDict['controls'][self._try_user_choice(buttons)]()
@@ -44,7 +44,7 @@ class ViewModel(Publisher):
         self._level = self._buttons = None
 
         if not self._model.level:  # If we already seen greetings
-            self._message = '\t\t\tПриветствую!\n' \
+            self._message = '\t\t\t\tПриветствую!\n' \
                             '\tЭто игра "Лабиринт" и вам нужно помочь Шарику найти косточку'
             self.notify()
             input()
@@ -54,7 +54,7 @@ class ViewModel(Publisher):
         try:
             open('save.pickle', 'rb')  # existing save check
 
-            self._message = '\n\tНачать новую игру или загрузить сохранение?'
+            self._message = '\n\t\tНачать новую игру или загрузить сохранение?'
             buttons = self._create_buttons(self._buttonsDict['load'])
             self._buttonsDict['load'][self._try_user_choice(buttons)]()
 
@@ -69,7 +69,7 @@ class ViewModel(Publisher):
         buttons = self._create_buttons(self._model.levels)
         difficulty = self._try_user_choice(buttons)
 
-        self._message = '\t\tВыберите желаемый уровень:'
+        self._message = '\t\t\tВыберите желаемый уровень:'
         buttons = self._create_buttons(self._model.levels[difficulty])
         level = self._try_user_choice(buttons)
 
@@ -86,14 +86,13 @@ class ViewModel(Publisher):
     def _create_buttons(self, collection: dict):
         buttons = {
             index: button
-            for index, button
-            in enumerate(collection)
+            for index, button in enumerate(collection)
             if collection[button]
         }
 
         self._buttons = ''
         for index, button in buttons.items():
-            self._buttons += f'\t\t{index}: {button}'
+            self._buttons += f'\t{index}: {button}'
         self.notify()
 
         return buttons
@@ -103,14 +102,14 @@ class ViewModel(Publisher):
 
     def _exit_game(self):
         self._clear()
-        self._message = 'До встречи, Шарик будет ждать тебя!'
+        self._message = '\t\t\tДо встречи, Шарик будет ждать тебя!'
 
     def _clear(self):
         self._session = self._level = self._buttons = None
 
     # todo rework
     def _except_handler(self, message):
-        self._message = message
+        self._message = f'\t\t\t{message}'
         self._clear()
         self.notify()
         input()
